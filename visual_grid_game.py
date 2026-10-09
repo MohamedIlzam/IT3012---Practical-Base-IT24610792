@@ -1,6 +1,7 @@
 # visual_grid_game.py
 import random
 import tkinter as tk
+from agent import SearchAgent
 
 
 class VisualGridHuntGame:
@@ -51,6 +52,12 @@ class VisualGridHuntGame:
         self.steps = 0
         self.collision = False
 
+        # Sample tile facts from Lab 07 worksheet
+        self.tile_facts = {
+            (1, 0): ['TargetVisible', 'HasDust', 'BloodseekerMissing'],
+            (0, 1): ['TargetVisible', 'HasDust']
+        }
+
     def get_percept(self) -> dict:
         x, y = self.agent_pos
         dx, dy = 0, 0
@@ -75,7 +82,12 @@ class VisualGridHuntGame:
 
         return {
             'wall_ahead': wall_ahead,
-            'food_here': food_here
+            'food_here': food_here,
+            'agent_pos': tuple(self.agent_pos),
+            'food_positions': set(self.food_positions),
+            'walls': set(self.walls),
+            'grid_size': (self.width, self.height),
+            'tile_facts': dict(self.tile_facts)
         }
 
     def execute_action(self, action: str):
@@ -107,6 +119,28 @@ class VisualGridHuntGame:
                 self.score -= 5
             else:
                 self.agent_pos = new_pos
+        elif action in ['Up', 'Down', 'Left', 'Right']:
+            self.agent_dir = action
+            new_pos = list(self.agent_pos)
+            if action == 'Up':
+                new_pos[1] = min(self.height - 1, new_pos[1] + 1)
+            elif action == 'Down':
+                new_pos[1] = max(0, new_pos[1] - 1)
+            elif action == 'Left':
+                new_pos[0] = max(0, new_pos[0] - 1)
+            elif action == 'Right':
+                new_pos[0] = min(self.width - 1, new_pos[0] + 1)
+
+            if tuple(new_pos) in self.walls:
+                self.score -= 5
+            else:
+                self.agent_pos = new_pos
+
+            # Automatically consume food if standing on it
+            tuple_pos = tuple(self.agent_pos)
+            if tuple_pos in self.food_positions:
+                self.food_positions.remove(tuple_pos)
+                self.score += 20
 
         tuple_pos = tuple(self.agent_pos)
         # Fix typo in original code
@@ -209,7 +243,7 @@ class ModelBasedAgent:
 class GridGameGUI:
     """Tkinter wrapper that dynamically scales cell sizes to keep larger grids on screen."""
 
-    def __init__(self, root, width=10, height=10, num_food=12, num_opponents=2, walls=None, agent_class=SimpleReflexAgent):
+    def __init__(self, root, width=10, height=10, num_food=12, num_opponents=2, walls=None, agent_class=SearchAgent):
         self.root = root
         self.root.title("IT3012 - Scalable Multi-Agent Grid Hunt")
 
@@ -324,6 +358,6 @@ class GridGameGUI:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    # Change SimpleReflexAgent to ModelBasedAgent to test/observe memory behavior
-    app = GridGameGUI(root, width=12, height=12, num_food=15, num_opponents=0, agent_class=SimpleReflexAgent)
+    # SE3062 Practical 07: SearchAgent with logic-based A* pathfinding
+    app = GridGameGUI(root, width=12, height=12, num_food=15, num_opponents=0, agent_class=SearchAgent)
     root.mainloop()

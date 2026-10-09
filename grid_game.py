@@ -11,8 +11,8 @@ class GridHuntGame:
         self.agent_pos = [0, 0]  # Starting position (x, y)
 
         # Place a few random food pellets and obstacles (walls)
-        self.food_positions = {[1, 2], [2, 3], [3, 0], [2, 1]}
-        self.walls = {[1, 1], [2, 2]}
+        self.food_positions = {(1, 2), (2, 3), (3, 0), (2, 1)}
+        self.walls = {(1, 1), (2, 2)}
 
         self.score = 0
         self.steps = 0
@@ -23,7 +23,10 @@ class GridHuntGame:
             'smells_food': tuple(self.agent_pos) in self.food_positions,
             'hit_wall': tuple(self.agent_pos) in self.walls,
             'score': self.score,
-            'remaining_food': len(self.food_positions)
+            'remaining_food': len(self.food_positions),
+            'food_positions': set(self.food_positions),
+            'walls': set(self.walls),
+            'grid_size': (self.width, self.height)
         }
 
     def execute_action(self, agent, action: str):
